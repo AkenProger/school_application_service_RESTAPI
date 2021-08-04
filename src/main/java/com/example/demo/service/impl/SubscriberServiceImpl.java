@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+
 @Service
 public class SubscriberServiceImpl implements SubscriberService {
 
@@ -20,10 +21,15 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Override
     public SubscriberDto save(SubscriberDto subscriberDto) {
-        Subscriber subscriber = subscriberMapper.toEntity(subscriberDto);
+        Subscriber subscriber = subscriberRepository.findByPhoneNumber(subscriberDto.getPhoneNumber());
+        if (subscriber != null) {
+            throw new RuntimeException("Такой user есть!");
+        }
+        subscriber = subscriberMapper.toEntity(subscriberDto);
         subscriber = subscriberRepository.save(subscriber);
         return subscriberMapper.toDto(subscriber);
     }
+
 
     @Override
     public SubscriberDto update(SubscriberDto subscriberDto) {

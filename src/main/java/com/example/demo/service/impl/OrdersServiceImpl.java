@@ -3,6 +3,7 @@ package com.example.demo.service.impl;
 import com.example.demo.dao.OrderRepository;
 import com.example.demo.exeptions.OrderExceptions;
 import com.example.demo.mappers.OrdersMapper;
+import com.example.demo.models.Response;
 import com.example.demo.models.dto.OrdersDto;
 import com.example.demo.models.entities.Orders;
 import com.example.demo.models.enums.OrderStatuses;
@@ -20,6 +21,23 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Autowired
     OrderRepository orderRepository;
+    Response response = new Response();
+
+    @Override
+    public Response saveOrder(OrdersDto ordersDto) {
+        int statusCode = checkingTheStatusOfTheLastClient(ordersDto);
+        switch (statusCode) {
+            case 1:
+            case 0:
+                response.setMessage("Ваша заявка принята!");
+                System.out.println(response.getMessage());
+            case 2:
+                response.setMessage("Ответ в рассмотрении!");
+                System.out.println(response.getMessage());
+        }
+        return response;
+    }
+
 
     @Override
     public OrdersDto save(OrdersDto ordersDto) {
@@ -50,14 +68,16 @@ public class OrdersServiceImpl implements OrdersService {
     public int checkingTheStatusOfTheLastClient(OrdersDto ordersDto) {
         Orders orders = orderRepository.findByEndDateAndSubscriberSubsId(null, ordersDto.getSubscriber().getId());
         if (orders != null) {
-            if (orders.getOrderStatuses().equals(OrderStatuses.NEW) ||
-                    orders.getOrderStatuses().equals(OrderStatuses.DENIED) || orders.getOrderStatuses().equals(OrderStatuses.APPROVED)) {
+            if (orders.getOrderStatuses().equals(OrderStatuses.NEW)
+                    ||
+                    orders.getOrderStatuses().equals(OrderStatuses.DENIED)
+                    || orders.getOrderStatuses().equals(OrderStatuses.APPROVED)
+            ) {
                 orders.setOrderStatuses(OrderStatuses.CANCELED);
                 orders.setEnd_date(new Date());
                 orderRepository.save(orders);
                 return 1;
             }
-
             if (orders.getOrderStatuses().equals(OrderStatuses.PROCESSED)) {
                 return 2;
             }
@@ -65,6 +85,7 @@ public class OrdersServiceImpl implements OrdersService {
             return 0;
         }
         throw new OrderExceptions("Ошибка при изменении!");
-
     }
+
+
 }

@@ -4,11 +4,9 @@ import com.example.demo.controllers.BaseController;
 import com.example.demo.models.Response;
 import com.example.demo.models.dto.OrdersDto;
 import com.example.demo.service.OrdersService;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,6 +22,10 @@ public class OrdersController implements BaseController<OrdersDto, Long> {
         return ordersService.saveOrder(ordersDto);
     }
 
+    @GetMapping("/getAllNewOrders")
+    public List<OrdersDto> getAllNewOrders() {
+        return ordersService.getAllNewOrders();
+    }
     @Override
     public OrdersDto save(OrdersDto ordersDto) {
         return ordersService.save(ordersDto);

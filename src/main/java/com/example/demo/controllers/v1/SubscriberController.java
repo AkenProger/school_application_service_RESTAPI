@@ -32,7 +32,7 @@ public class SubscriberController implements BaseController<SubscriberDto, Long>
 
     @Override
     public List<SubscriberDto> findAll() {
-        return null;
+        return subscriberService.findAll();
     }
 
     @Override

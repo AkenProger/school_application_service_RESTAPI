@@ -15,7 +15,6 @@ public class Orders {
     private Long id;
     private String schoolName;
     private String address;
-    @CreationTimestamp
     private Date add_date;
     private Date end_date;
     private Date navi_date;

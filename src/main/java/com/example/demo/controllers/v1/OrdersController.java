@@ -6,6 +6,7 @@ import com.example.demo.models.dto.OrdersDto;
 import com.example.demo.service.OrdersService;
 import org.aspectj.weaver.ast.Or;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Description;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,9 +23,25 @@ public class OrdersController implements BaseController<OrdersDto, Long> {
         return ordersService.saveOrder(ordersDto);
     }
 
+
     @GetMapping("/getAllNewOrders")
     public List<OrdersDto> getAllNewOrders() {
         return ordersService.getAllNewOrders();
+    }
+
+    @PostMapping("/processOrder")
+    public Response processOrder(@RequestParam Long id) {
+     return ordersService.processingOrder(id);
+    }
+
+    @PostMapping("/acceptOrder")
+    public Response acceptOrder(@RequestParam Long id) {
+        return ordersService.acceptOrder(id);
+    }
+
+    @PostMapping("/deniedOrderById")
+    public Response deniedOrder(@RequestParam Long id, @RequestParam String comment) {
+        return ordersService.deniedOrderById(id,comment);
     }
     @Override
     public OrdersDto save(OrdersDto ordersDto) {

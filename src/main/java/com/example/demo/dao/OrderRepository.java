@@ -13,9 +13,11 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
     @Query(value = "select * from subscriber s, orders o where o.end_date = null and s.id = ?1", nativeQuery = true)
     Orders findByEndDateAndSubscriberSubsId(Long id);
 
-    @Query(value = "select * from orders o where o.end_date = null and o.order_statuses = ?1", nativeQuery = true)
-    List<Orders> findByOrderStatusAndEndDate(OrderStatuses orderStatuses);
+    @Query(value = "select * from orders o where o.order_statuses = 'NEW' and o.end_date is NULL", nativeQuery = true)
+    List<Orders> findByOrderStatusAndEndDate();
 
+    @Query(value = "select * from orders o where o.order_statuses = 'PROCESSED' and o.id =?1",nativeQuery = true)
+    Orders findByStatusWhereProcess(Long id);
 
     //Orders findByEndDateAndOrderStatusAndSubscriberSubsId(Date date, OrderStatuses orderStatus, Long id);
 

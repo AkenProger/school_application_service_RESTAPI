@@ -12,7 +12,7 @@ import java.util.Date;
 @Entity
 public class Subscriber {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String name;
     private Date date_birth;

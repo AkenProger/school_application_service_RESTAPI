@@ -3,19 +3,14 @@ package com.example.demo.service.impl;
 import com.example.demo.dao.OrderRepository;
 import com.example.demo.exeptions.OrderExceptions;
 import com.example.demo.mappers.OrdersMapper;
-import com.example.demo.mappers.SubscriberMapper;
 import com.example.demo.models.Response;
 import com.example.demo.models.dto.OrdersDto;
-import com.example.demo.models.dto.SubscriberDto;
 import com.example.demo.models.entities.Orders;
-import com.example.demo.models.entities.Subscriber;
 import com.example.demo.models.enums.OrderStatuses;
 import com.example.demo.service.OrdersService;
 import com.example.demo.service.SubscriberService;
-import com.sun.xml.bind.v2.TODO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.example.demo.models.enums.OrderStatuses;
 
 import java.util.Date;
 import java.util.List;
@@ -36,7 +31,6 @@ public class OrdersServiceImpl implements OrdersService {
     private SubscriberService subscriberService;
 
 
-
     @Override
     public Response saveOrder(OrdersDto ordersDto) {
 
@@ -44,7 +38,7 @@ public class OrdersServiceImpl implements OrdersService {
         switch (statusCode) {
             case 1:
             case 0:
-                saveNewOrders(ordersDto);
+                save(ordersDto);
                 System.out.println(response.getMessage());
                 response.setCode(1);
                 response.setMessage("Ваша заявка принята!");
@@ -63,12 +57,20 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Override
     public OrdersDto save(OrdersDto ordersDto) {
-        return null;
+        ordersDto.setAdd_date(new Date());
+        ordersDto.setOrderStatuses(OrderStatuses.NEW);
+        Orders orders = ordersMapper.toEntity(ordersDto);
+        orderRepository.save(orders);
+        return ordersMapper.toDto(orders);
     }
 
     @Override
     public OrdersDto update(OrdersDto ordersDto) {
-        return null;
+        if (orderRepository.existsById(ordersDto.getId()))
+            new Response().setMessage("Не найден заявка с такой ID номером!");
+        Orders orders = ordersMapper.toEntity(ordersDto);
+        orders = orderRepository.save(orders);
+        return ordersMapper.toDto(orders);
     }
 
     @Override
@@ -78,12 +80,14 @@ public class OrdersServiceImpl implements OrdersService {
 
     @Override
     public OrdersDto findById(Long id) {
-        return null;
+        Orders orders = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Не найден заявка с такой ID!"));
+        return ordersMapper.toDto(orders);
     }
 
     @Override
     public void deleteById(Long id) {
-
+        orderRepository.deleteById(id);
     }
 
 
@@ -108,16 +112,72 @@ public class OrdersServiceImpl implements OrdersService {
         }
         throw new OrderExceptions("Ошибка при изменении!");
     }
+
     //Получить все новые заявки
     public List<OrdersDto> getAllNewOrders() {
-        return ordersMapper.toDtoList(orderRepository.findByOrderStatusAndEndDate(OrderStatuses.NEW));
+        return ordersMapper.toDtoList(orderRepository.findByOrderStatusAndEndDate());
     }
-    //Сохранение заявки
-    public void saveNewOrders(OrdersDto ordersDto) {
-        ordersDto.setAdd_date(new Date());
-        ordersDto.setOrderStatuses(OrderStatuses.NEW);
-        Orders orders = ordersMapper.toEntity(ordersDto);
-        orderRepository.save(orders);
+
+    @Override
+    public Response processingOrder(Long id) {
+        Response response = new Response();
+        if (orderRepository.existsById(id)) {
+
+            Orders orders = orderRepository.findById(id).get();
+            if (orders.getOrderStatuses().equals(OrderStatuses.NEW) && orders.getEnd_date() == null) {
+                orders.setEnd_date(new Date());
+                orders.setNavi_date(new Date());
+                orders.setOrderStatuses(OrderStatuses.PROCESSED);
+                orderRepository.save(orders);
+                response.setCode(1);
+                response.setMessage("Ваша заявка принята на рассмотрение!");
+                return response;
+            } else {
+                response.setCode(0);
+                response.setMessage("Невозможно принять заявку на рассмотрение!");
+                return response;
+            }
+
+        } else {
+            response.setCode(0);
+            response.setMessage("Результаты по данному ID не найдены.Введите корректные данные!");
+        }
+        return null;
+    }
+
+    @Override
+    public Response acceptOrder(Long id) {
+        Response response = new Response();
+        Orders orders = orderRepository.findByStatusWhereProcess(id);
+        if (orders != null) {
+            orders.setEnd_date(new Date());
+            orders.setOrderStatuses(OrderStatuses.APPROVED);
+            orderRepository.save(orders);
+            response.setCode(1);
+            response.setMessage("Ваша заявка принята!");
+            return response;
+        }
+        response.setCode(0);
+        response.setMessage("Повторите попытку ещё раз!");
+        return response;
+    }
+
+    @Override
+    public Response deniedOrderById(Long id, String comment) {
+        Response response = new Response();
+        Orders orders = orderRepository.findByStatusWhereProcess(id);
+        if (orders != null) {
+            orders.setEnd_date(new Date());
+            orders.setComment(comment);
+            orders.setOrderStatuses(OrderStatuses.DENIED);
+            orderRepository.save(orders);
+            response.setCode(0);
+            response.setMessage("Ваша заявка отклонена!");
+            return response;
+        }
+        response.setCode(0);
+        response.setMessage("Повторите попытку ещё раз!");
+        return response;
     }
 
 
